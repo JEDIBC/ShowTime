@@ -94,7 +94,7 @@ class Nyaaruto implements ProviderInterface
      */
     public function download($file)
     {
-        $output = shell_exec(escapeshellcmd("transmission-remote -a " . $file));
+        $output = shell_exec(escapeshellcmd("transmission-remote 127.0.0.1:9091 -a " . $file));
         $string = new String($output);
 
         return $string->contains(array('responded', 'success'));
