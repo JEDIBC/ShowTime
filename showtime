@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+use Symfony\Component\Console\Application as ConsoleApplication;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use ShowTime\Application;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use ShowTime\Handler\ConsoleHandler;
+
+// Define php error log file
+ini_set('error_log', __DIR__ . "/app/logs/php-errors.log");
+ini_set('display_errors', 0);
+
+// Autologing
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Initialize monolog logger
+$logger = new Logger('alphabet');
+$logger->pushHandler(new StreamHandler(__DIR__ . '/app/logs/error.log', Logger::ERROR));
+
+// Initialize showtime application
+$application = new Application(
+    json_decode(file_get_contents(__DIR__ . '/app/config/schedules.json'), true),
+    json_decode(file_get_contents(__DIR__ . '/app/config/providers.json'), true),
+    json_decode(file_get_contents(__DIR__ . '/app/config/routing.json'), true),
+    $logger
+);
+
+// initialize console application
+$console = new ConsoleApplication();
+
+$console->register('all')
+    ->setDescription('Download all episodes')
+    ->addOption('debug', null, InputOption::VALUE_NONE, 'Add more detailed logs')
+    ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Search files without downloading them')
+    ->setCode(
+    function (InputInterface $input, OutputInterface $output) use ($application) {
+        $level = ($input->getOption('debug')) ? Logger::DEBUG : Logger::INFO;
+        $application->getLogger()->pushHandler(new StreamHandler(__DIR__ . '/app/logs/showtime.log', $level));
+
+        if ($input->getOption('verbose')) {
+            $application->getLogger()->pushHandler(new ConsoleHandler($output, $level));
+        }
+
+        $application->handle($input->getOption('dry-run'));
+    }
+);
+
+$scheduleList = $application->getSchedulesList();
+foreach ($scheduleList as $schedule) {
+    $console->register($schedule)
+        ->setDescription('Download all episodes from the ' . $schedule . ' schedule')
+        ->addOption('debug', null, InputOption::VALUE_NONE, 'Add more detailed logs')
+        ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Search files without downloading them')
+        ->setCode(
+        function (InputInterface $input, OutputInterface $output) use ($application, $schedule) {
+            $level = ($input->getOption('debug')) ? Logger::DEBUG : Logger::INFO;
+            $application->getLogger()->pushHandler(new StreamHandler(__DIR__ . '/app/logs/showtime.log', $level));
+
+            if ($input->getOption('verbose')) {
+                $application->getLogger()->pushHandler(new ConsoleHandler($output, $level));
+            }
+
+            $application->handle($input->getOption('dry-run'), $schedule);
+        }
+    );
+}
+
+$console->run();

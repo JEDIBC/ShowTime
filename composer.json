@@ -1,0 +1,21 @@
+{
+    "name":"jedibc/ShowTime",
+    "description":"Automatic tv shows downloader",
+    "require":{
+        "jedibc/phpseries":"dev-master",
+        "fabpot/goutte":"dev-master",
+        "symfony/console":"v2.1.8",
+        "monolog/monolog":"1.4.0"
+    },
+    "authors":[
+        {
+            "name":"Bruno CHALOPIN",
+            "email":"bruno@chalopin.fr"
+        }
+    ],
+    "autoload":{
+        "psr-0":{
+            "ShowTime":"src/"
+        }
+    }
+}

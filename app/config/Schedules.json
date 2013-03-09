@@ -1,0 +1,10 @@
+{
+    "bruno":{
+        "class":"BetaSeries",
+        "config":{
+            "apiKey":"",
+            "login":"",
+            "md5Password":""
+        }
+    }
+}

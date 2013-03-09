@@ -1,0 +1,24 @@
+{
+    "eztv":{
+        "class":"Eztv",
+        "config":{
+            "shows":{
+                "hawaiifiveo2010":"Hawaii Five-0 (2010)",
+                "bigbangtheory":"Big Bang Theory, The"
+            },
+            "keywords":{
+                "include":["HDTV"],
+                "exclude":["720p"]
+            }
+        }
+    },
+    "nyaaruto":{
+        "class":"Nyaaruto",
+        "config":{
+            "keywords":{
+                "include":["HQ", "VOSTFR"],
+                "exclude":["MQ"]
+            }
+        }
+    }
+}
