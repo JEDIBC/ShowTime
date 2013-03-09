@@ -152,12 +152,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/JEDIBC/PhpSeries.git",
-                "reference": "f4cf8ec7e0c3eafe2e22d246dd14b0159124bd84"
+                "reference": "4dd4f88f2c0c59b9e980557c0285d4168a68b39f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JEDIBC/PhpSeries/zipball/f4cf8ec7e0c3eafe2e22d246dd14b0159124bd84",
-                "reference": "f4cf8ec7e0c3eafe2e22d246dd14b0159124bd84",
+                "url": "https://api.github.com/repos/JEDIBC/PhpSeries/zipball/4dd4f88f2c0c59b9e980557c0285d4168a68b39f",
+                "reference": "4dd4f88f2c0c59b9e980557c0285d4168a68b39f",
                 "shasum": ""
             },
             "require": {
@@ -184,7 +184,7 @@
                 }
             ],
             "description": "PHP client library of the BetaSeries web api",
-            "time": "2013-03-08 15:25:45"
+            "time": "2013-03-08 19:11:10"
         },
         {
             "name": "monolog/monolog",
