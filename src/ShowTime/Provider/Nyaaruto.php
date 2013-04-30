@@ -1,9 +1,9 @@
 <?php
 namespace ShowTime\Provider;
 
+use Goutte\Client;
 use Monolog\Logger;
 use ShowTime\Schedule\Episode;
-use Goutte\Client;
 use ShowTime\Tools\String;
 
 class Nyaaruto implements ProviderInterface
@@ -35,6 +35,33 @@ class Nyaaruto implements ProviderInterface
     }
 
     /**
+     * @param \ShowTime\Schedule\Episode $episode
+     *
+     * @return bool|string
+     */
+    public function search(Episode $episode)
+    {
+        // retrieve episode list
+        $episodeList = $this->getEpisodeList();
+
+        foreach ($episodeList as $item) {
+            if (!is_null($item)) {
+                $episodeName = new String($item['episode']);
+                $this->logger->debug('Test ' . $item['episode'] . '...');
+                if ($episodeName->contains(' ' . $episode->getGlobal() . ' ')) {
+                    if ($episodeName->contains($this->config['keywords']['include']) && !$episodeName->contains($this->config['keywords']['exclude'])) {
+                        $this->logger->info('Found :' . $item['episode']);
+
+                        return $item['torrent'];
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array
      */
     protected function getEpisodeList()
@@ -50,10 +77,14 @@ class Nyaaruto implements ProviderInterface
                     function ($node) {
                         $xml = simplexml_import_dom($node);
 
-                        return array(
-                            'episode' => trim((string)$xml->td[1]->a),
-                            'torrent' => trim((string)$xml->td[2]->a['href'])
-                        );
+                        if (isset($xml->td[1]->a) && isset($xml->td[2]->a['href'])) {
+                            return array(
+                                'episode' => trim((string)$xml->td[1]->a),
+                                'torrent' => trim((string)$xml->td[2]->a['href'])
+                            );
+                        } else {
+                            return null;
+                        }
                     }
                 );
             }
@@ -65,31 +96,8 @@ class Nyaaruto implements ProviderInterface
     }
 
     /**
-     * @param \ShowTime\Schedule\Episode $episode
-     * @return bool|string
-     */
-    public function search(Episode $episode)
-    {
-        // retrieve episode list
-        $episodeList = $this->getEpisodeList();
-
-        foreach ($episodeList as $item) {
-            $episodeName = new String($item['episode']);
-            $this->logger->debug('Test ' . $item['episode'] . '...');
-            if ($episodeName->contains(' ' . $episode->getGlobal() . ' ')) {
-                if ($episodeName->contains($this->config['keywords']['include']) && !$episodeName->contains($this->config['keywords']['exclude'])) {
-                    $this->logger->info('Found :' . $item['episode']);
-
-                    return $item['torrent'];
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * @param string $file
+     *
      * @return bool
      */
     public function download($file)

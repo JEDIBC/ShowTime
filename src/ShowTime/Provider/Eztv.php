@@ -1,9 +1,9 @@
 <?php
 namespace ShowTime\Provider;
 
+use Goutte\Client;
 use Monolog\Logger;
 use ShowTime\Schedule\Episode;
-use Goutte\Client;
 use ShowTime\Tools\String;
 
 class Eztv implements ProviderInterface
@@ -32,6 +32,42 @@ class Eztv implements ProviderInterface
     {
         $this->config = $config;
         $this->logger = $logger;
+    }
+
+    /**
+     * @param \ShowTime\Schedule\Episode $episode
+     *
+     * @return bool|string
+     */
+    public function search(Episode $episode)
+    {
+        // check for show name replacement
+        $showName = isset($this->config['shows'][$episode->getShowId()]) ? $this->config['shows'][$episode->getShowId()] : $episode->getShow();
+
+        // retrieve show list
+        $showList = $this->getShowListUrl();
+
+        $path = isset($showList[$showName]) ? $showList[$showName] : false;
+        if (false === $path) {
+            return false;
+        }
+
+        // retrieve episode list
+        $episodeList = $this->getEpisodeList($path);
+
+        foreach ($episodeList as $item) {
+            if (!is_null($item)) {
+                $episodeName = new String($item['episode']);
+                $this->logger->debug('Test ' . $item['episode'] . '...');
+                if ($episodeName->contains(sprintf('%dx%02d', $episode->getSeason(), $episode->getEpisode())) || $episodeName->contains(sprintf('S%02dE%02d', $episode->getSeason(), $episode->getEpisode()))) {
+                    if ($episodeName->contains($this->config['keywords']['include']) && !$episodeName->contains($this->config['keywords']['exclude'])) {
+                        return $item['magnet'];
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -68,6 +104,7 @@ class Eztv implements ProviderInterface
 
     /**
      * @param string $path
+     *
      * @return array
      */
     protected function getEpisodeList($path)
@@ -82,10 +119,14 @@ class Eztv implements ProviderInterface
                 function ($node) {
                     $xml = simplexml_import_dom($node);
 
-                    return array(
-                        'episode' => trim((string)$xml->td[1]->a),
-                        'magnet'  => trim((string)$xml->td[2]->a[0]['href'])
-                    );
+                    if (isset($xml->td[1]->a) && isset($xml->td[2]->a[0]['href'])) {
+                        return array(
+                            'episode' => trim((string)$xml->td[1]->a),
+                            'magnet'  => trim((string)$xml->td[2]->a[0]['href'])
+                        );
+                    } else {
+                        return null;
+                    }
                 }
             );
         }
@@ -95,40 +136,8 @@ class Eztv implements ProviderInterface
     }
 
     /**
-     * @param \ShowTime\Schedule\Episode $episode
-     * @return bool|string
-     */
-    public function search(Episode $episode)
-    {
-        // check for show name replacement
-        $showName = isset($this->config['shows'][$episode->getShowId()]) ? $this->config['shows'][$episode->getShowId()] : $episode->getShow();
-
-        // retrieve show list
-        $showList = $this->getShowListUrl();
-
-        $path = isset($showList[$showName]) ? $showList[$showName] : false;
-        if (false === $path) {
-            return false;
-        }
-
-        // retrieve episode list
-        $episodeList = $this->getEpisodeList($path);
-
-        foreach ($episodeList as $item) {
-            $episodeName = new String($item['episode']);
-            $this->logger->debug('Test ' . $item['episode'] . '...');
-            if ($episodeName->contains(sprintf('%dx%02d', $episode->getSeason(), $episode->getEpisode())) || $episodeName->contains(sprintf('S%02dE%02d', $episode->getSeason(), $episode->getEpisode()))) {
-                if ($episodeName->contains($this->config['keywords']['include']) && !$episodeName->contains($this->config['keywords']['exclude'])) {
-                    return $item['magnet'];
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * @param string $file
+     *
      * @return bool
      */
     public function download($file)
