@@ -18,7 +18,7 @@ ini_set('display_errors', 0);
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize monolog logger
-$logger = new Logger('alphabet');
+$logger = new Logger('ShowTime');
 $logger->pushHandler(new StreamHandler(__DIR__ . '/app/logs/error.log', Logger::ERROR));
 
 // Initialize showtime application
